@@ -34,6 +34,7 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
     def poll(cls, context):
         return context.mode == 'OBJECT'
 
+
     def get_version(self):
         version = ""
         for v in bl_info["version"]:
@@ -85,6 +86,7 @@ class MTR_StatMesh(bpy.types.Operator):
     bl_label = "Get mesh's heightmap info"
     bl_idname = "object.stat_mesh"
 
+
     def execute(self, context):
         obj = context.active_object
         heights = list() # float
@@ -117,8 +119,32 @@ class MTR_MeshToRaw(bpy.types.Operator):
     bl_label = "Mesh to Raw"
 
 
+    def precheck(self, obj, res):
+        if not is_power_of_2(res-1):
+            show_error_msg(self, f"Mesh resolution is not power of 2 + 1: got {res}")
+            return False
+
+        width = int(obj.dimensions[0])
+        depth = int(obj.dimensions[1])
+
+        if width != depth:
+            show_error_msg(self, f"Dimensions are not equal: got {width}x{depth}")
+            return False
+
+        if not is_power_of_2(width):
+            show_error_msg(self, f"Dimensions are not power of 2: got {width}")
+            return False
+
+        return True
+
+
     def execute(self, context):
         obj = context.active_object
+
+        res = int(math.sqrt(len(obj.data.vertices)))
+        if not self.precheck(obj, res):
+            return {'CANCELLED'}
+
         positions = list() # Vector2
         heights = list() # float
         # data is of type bpy.types.Mesh
@@ -126,10 +152,7 @@ class MTR_MeshToRaw(bpy.types.Operator):
             positions.append(v.co.to_2d())
             heights.append(v.co[2])
 
-        width = int(obj.dimensions[0])+1
-        depth = int(obj.dimensions[1])+1
-
-        heightmap = [[0 for x in range(width)] for y in range(depth)] # integers
+        heightmap = [[0 for x in range(res)] for y in range(res)] # integers
 
         bottom = heights[0]
         top = heights[0]
@@ -147,24 +170,25 @@ class MTR_MeshToRaw(bpy.types.Operator):
             pos = positions[i]
             x = int(pos[0])
             y = int(pos[1])
-            if x < 0 or y < 0 or x >= width or y >= depth:
-                break
+            if x < 0 or y < 0 or x >= res or y >= res:
+                show_error_msg(self, f"Position ({x}, {y}) is out-of-bounds [0, {res - 1}]")
+                return {'CANCELLED'}
             heightmap[x][y] = round_int((heights[i] - bottom) * h_scale)
 
         global_settings = context.scene.MTR_ExportProperties
 
         y_start = 0
-        y_stop = depth
+        y_stop = res
         y_step = 1
         x_start = 0
-        x_stop = width
+        x_stop = res
         x_step = 1
         if global_settings.EXPORT_INVERT_Y:
-            y_start = depth-1
+            y_start = res-1
             y_stop = -1
             y_step = -1
         if global_settings.EXPORT_INVERT_X:
-            x_start = width-1
+            x_start = res-1
             x_stop = -1
             x_step = -1
 
@@ -173,7 +197,7 @@ class MTR_MeshToRaw(bpy.types.Operator):
             for x in range(x_start, x_stop, x_step):
                 flattend_heightmap.append(heightmap[x][y])
 
-        bytes = struct.pack(f"<{width*depth}H", *flattend_heightmap) # little-endian, ushort (aka unsigned 16-bit-integer)
+        bytes = struct.pack(f"<{res*res}H", *flattend_heightmap) # little-endian, ushort (aka unsigned 16-bit-integer)
 
         e_file = global_settings.EXPORT_FILE
         if not e_file.endswith(".raw"):
@@ -185,7 +209,24 @@ class MTR_MeshToRaw(bpy.types.Operator):
         export.write(bytes)
         export.close()
 
+        show_info_msg(self, "Export done")
+
         return {'FINISHED'}
+
+
+def show_error_msg(self, txt):
+    msg = (txt)
+    self.report({'ERROR'}, msg)
+
+
+def show_info_msg(self, txt):
+    msg = (txt)
+    self.report({'INFO'}, msg)
+
+
+# formula taken from: https://stackoverflow.com/a/57025941 (© @tomerikoo)
+def is_power_of_2(n):
+    return (n & (n-1) == 0) and n != 0
 
 
 def round_int(v):

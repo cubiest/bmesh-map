@@ -11,6 +11,12 @@ Works well with [Zylann's Heightmap Plugin](https://github.com/Zylann/godot_heig
 
 Download the file and install like any Blender Add-on.
 
+Verified Compatibility
+| Add-on Version | Blender Versions |
+| --------------- | --------------- |
+| 1.1             | 3.3             |
+| 1.0             | 3.3             |
+
 
 ## Restrictions
 
