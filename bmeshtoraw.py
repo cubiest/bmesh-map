@@ -77,7 +77,6 @@ class MTR_StatMesh(bpy.types.Operator):
         bottom = round_decimals(bottom, 4)
         top = round_decimals(top, 4)
 
-        print(len(obj.data.vertices))
         res = str(int(math.sqrt(len(obj.data.vertices))))
 
         global_settings = context.scene.MTR_ExportProperties
