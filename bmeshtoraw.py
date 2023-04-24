@@ -18,6 +18,7 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
 
+    OBJ_PROP_FULL_NAME: bpy.props.StringProperty()
     OBJ_PROP_RES: bpy.props.StringProperty()
     OBJ_PROP_BOTTOM: bpy.props.StringProperty()
     OBJ_PROP_TOP: bpy.props.StringProperty()
@@ -49,18 +50,25 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         layout = self.layout
         global_settings = context.scene.MTR_ExportProperties
 
+        name = context.active_object.name
+        res = "?"
+        bottom = "?"
+        top = "?"
+
+        if context.active_object.name == global_settings.OBJ_PROP_FULL_NAME:
+            res = global_settings.OBJ_PROP_RES
+            bottom = global_settings.OBJ_PROP_BOTTOM
+            top = global_settings.OBJ_PROP_TOP
+
+        res = f"Res: {res}x{res}"
+        range = f"Min-Max: {bottom} - {top}"
+
         col = layout.column()
         col.label(text="Stats:")
         col.operator("object.stat_mesh", text="Get Status")
 
         box = col.box()
-        box.label(text="Name: " + obj.name)
-        res = "Res: </>"
-        range = "Min-Max: </>"
-        if global_settings.OBJ_PROP_RES:
-            res = f"Res: {global_settings.OBJ_PROP_RES}x{global_settings.OBJ_PROP_RES}"
-        if global_settings.OBJ_PROP_BOTTOM and global_settings.OBJ_PROP_TOP:
-            range = f"Min-Max: {global_settings.OBJ_PROP_BOTTOM} - {global_settings.OBJ_PROP_TOP}"
+        box.label(text="Name: " + name)
         box.label(text=res)
         box.label(text=range)
 
@@ -172,7 +180,10 @@ class MTR_MeshToRaw(bpy.types.Operator):
 # - float: lowest height value, or 0.0 on error
 # - float: highest height value, or 0.0 on error
 def fullcheck(self, context):
+    global_settings = context.scene.MTR_ExportProperties
+
     obj = context.active_object
+    global_settings.OBJ_PROP_FULL_NAME = obj.name_full
     res = int(math.sqrt(len(obj.data.vertices)))
 
     positions = list() # Vector2
