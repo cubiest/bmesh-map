@@ -7,6 +7,7 @@ Example Process
   * Mesh Size to 128x128, and
   * Subdivision to 129x129 (_NOTE_: subdivision must always be 1 higher)
     * **this value is the resolution (power of 2 + 1)**
+  * Make sure the Object's Origin is at the bottom-left of your Mesh (then all vertices have positive positions on the x- and y-axis).
 * While in `Object Mode`, open the `Heightmap`-tools-tab,
   * click `Get Status`: shows you info on your Mesh: check your resolution and note down your min and max values (i.e. the lowest and highest vertex)
   * set a Filename: it will be saved in the same directory as your blend file
@@ -14,7 +15,7 @@ Example Process
   * click `Export` and you get your mesh as a heightmap file (`.raw`)
 * Done
 
-![Mesh in Blender](blender.png)
+![Mesh in Blender](images/blender.png)
 
 
 ## Godot
@@ -25,6 +26,6 @@ Import settings
 * Raw Endianess: `Little Endian`
 * `Min Height` + `Max Height`: take them from the Add-on Panel in Blender, see `Min-Max`.
 
-![Imported map in Godot](godot_zylanns_hm_plugin.png)
+![Imported map in Godot using Zylann's Heightmap Plugin](images/godot_zylanns_hm_plugin.png)
 
-Enjoy the round- and fluffyness!
+Enjoy the beautiful export!

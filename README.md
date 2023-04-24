@@ -14,8 +14,14 @@ Download the file and install like any Blender Add-on.
 Verified Compatibility
 | Add-on Version | Blender Versions |
 | --------------- | --------------- |
+| 1.2             | 3.3             |
 | 1.1             | 3.3             |
 | 1.0             | 3.3             |
+
+
+## Usage
+
+[Documentation](docs/README.md)
 
 
 ## Restrictions
@@ -23,7 +29,6 @@ Verified Compatibility
 To get any heightmap, respect the following
 * The Add-on works in Object Space and all vertices on x- and y-axis must be positive, that means the Object origin must be at the bottom left of your map (as seen from top view).
   * Simplest setup: Your Object Origin is at World Origin and the map's vertices are all on the positive x- and y-axis (where each vertex has an axis-position >= 0).
-  * In case your setup in incorrect, the only feedback you get right now is there'll be no file.
 * The Object's Dimensions (width and depth on x- and y-axis) must be equal in size.
   * should be a power of 2 number, e.g. 128x128, 256x256, 512x512, 1024x1024, etc.
 * The Object Mesh' vertex count should create a resolution of power of 2 plus 1 (e.g. 129x129, etc.)

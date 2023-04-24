@@ -21,6 +21,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * GUI Layout
 
 
+### Fixed
+
+* When selecting another object, the stats were not updated.
+
+
 ## [1.1.0] - 2023-04-24
 
 ### Added
