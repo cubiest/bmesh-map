@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Mesh To Raw",
     "author": "Cubiest, Benjamin Lösch",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (3, 3, 0),
     "description": "Export your mesh as a RAW heightmap (uint16 little-endian)",
     "doc_url": "https://github.com/cubiest/bmesh-to-raw/blob/main/docs/README.md",
@@ -14,6 +14,8 @@ from bpy import context
 
 class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     EXPORT_FILE: bpy.props.StringProperty(name="Filename", default="heightmap", maxlen=30)
+    EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
+    EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
 
     OBJ_PROP_RES: bpy.props.StringProperty()
     OBJ_PROP_BOTTOM: bpy.props.StringProperty()
@@ -51,8 +53,10 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         self.layout.label(text=res)
         self.layout.label(text=range)
 
-        self.layout.label(text="Export Path:")
+        self.layout.label(text="Export:")
         self.layout.prop(global_settings, "EXPORT_FILE")
+        self.layout.prop(global_settings, "EXPORT_INVERT_Y")
+        self.layout.prop(global_settings, "EXPORT_INVERT_X")
         self.layout.operator("object.mesh_to_raw", text="Export")
 
 
@@ -125,15 +129,30 @@ class MTR_MeshToRaw(bpy.types.Operator):
             if x < 0 or y < 0 or x >= width or y >= depth:
                 break
             heightmap[x][y] = round_int((heights[i] - bottom) * h_scale)
-      
+
+        global_settings = context.scene.MTR_ExportProperties
+
+        y_start = 0
+        y_stop = depth
+        y_step = 1
+        x_start = 0
+        x_stop = width
+        x_step = 1
+        if global_settings.EXPORT_INVERT_Y:
+            y_start = depth-1
+            y_stop = -1
+            y_step = -1
+        if global_settings.EXPORT_INVERT_X:
+            x_start = width-1
+            x_stop = -1
+            x_step = -1
+
         flattend_heightmap = list()
-        for y in range(depth):
-            for x in range(width):
+        for y in range(y_start, y_stop, y_step):
+            for x in range(x_start, x_stop, x_step):
                 flattend_heightmap.append(heightmap[x][y])
 
         bytes = struct.pack(f"<{width*depth}H", *flattend_heightmap) # little-endian, ushort (aka unsigned 16-bit-integer)
-
-        global_settings = context.scene.MTR_ExportProperties
 
         e_file = global_settings.EXPORT_FILE
         if not e_file.endswith(".raw"):

@@ -10,6 +10,7 @@ Example Process
 * While in `Object Mode`, open the `Heightmap`-tools-tab,
   * click `Get Status`: shows you info on your Mesh: check your resolution and note down your min and max values (i.e. the lowest and highest vertex)
   * set a Filename: it will be saved in the same directory as your blend file
+  * **for Godot (Zylann's Heightmap Plugin)**: make sure that `Invert X-axis` is toggled, else your map is mirrored on the x-axis
   * click `Export` and you get your mesh as a heightmap file (`.raw`)
 * Done
 
