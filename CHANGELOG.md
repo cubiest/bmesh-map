@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] - 2023-04-xx
+
+### Added
+
+* Version info in the panel footer
+
+
+### Changed
+
+* GUI Layout
+
+
 ## [1.1.0] - 2023-04-24
 
 ### Added

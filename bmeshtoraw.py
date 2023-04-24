@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Mesh To Raw",
     "author": "Cubiest, Benjamin Lösch",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (3, 3, 0),
     "description": "Export your mesh as a RAW heightmap (uint16 little-endian)",
     "doc_url": "https://github.com/cubiest/bmesh-to-raw/blob/main/docs/README.md",
@@ -13,7 +13,7 @@ from bpy import context
 
 
 class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
-    EXPORT_FILE: bpy.props.StringProperty(name="Filename", default="heightmap", maxlen=30)
+    EXPORT_FILE: bpy.props.StringProperty(name="Filename:", default="heightmap", maxlen=30)
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
 
@@ -34,30 +34,51 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
     def poll(cls, context):
         return context.mode == 'OBJECT'
 
+    def get_version(self):
+        version = ""
+        for v in bl_info["version"]:
+            version += str(v) + "."
+        if version.endswith("."):
+            version = version[:-1]
+        return version
+
 
     def draw(self, context):
+        obj = context.active_object
+        if obj is None:
+            return
+
+        layout = self.layout
         global_settings = context.scene.MTR_ExportProperties
 
-        self.layout.operator("object.stat_mesh", text="Get Status")
+        col = layout.column()
+        col.label(text="Stats:")
+        col.operator("object.stat_mesh", text="Get Status")
 
-        obj = context.active_object
-        self.layout.label(text="Stats: " + obj.name)
-
+        box = col.box()
+        box.label(text="Name: " + obj.name)
         res = "Res: </>"
         range = "Min-Max: </>"
         if global_settings.OBJ_PROP_RES:
             res = f"Res: {global_settings.OBJ_PROP_RES}x{global_settings.OBJ_PROP_RES}"
         if global_settings.OBJ_PROP_BOTTOM and global_settings.OBJ_PROP_TOP:
             range = f"Min-Max: {global_settings.OBJ_PROP_BOTTOM} - {global_settings.OBJ_PROP_TOP}"
+        box.label(text=res)
+        box.label(text=range)
 
-        self.layout.label(text=res)
-        self.layout.label(text=range)
+        col.separator() # close box
 
-        self.layout.label(text="Export:")
-        self.layout.prop(global_settings, "EXPORT_FILE")
-        self.layout.prop(global_settings, "EXPORT_INVERT_Y")
-        self.layout.prop(global_settings, "EXPORT_INVERT_X")
-        self.layout.operator("object.mesh_to_raw", text="Export")
+        col.label(text="Export:")
+
+        box = col.box()
+        box.prop(global_settings, "EXPORT_FILE")
+        box.prop(global_settings, "EXPORT_INVERT_Y")
+        box.prop(global_settings, "EXPORT_INVERT_X")
+        box.operator("object.mesh_to_raw", text="Export")
+
+        col.separator() # close box
+
+        col.label(text="ver " + self.get_version())
 
 
 class MTR_StatMesh(bpy.types.Operator):
