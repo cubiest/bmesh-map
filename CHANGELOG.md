@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 * Version info in the panel footer
+* Quality check
+  * dimensions: are they equal and power of 2?
+  * resolution: is it power of 2 + 1?
+  * are vertex positions (object-space) valid and not out-of-bounds?
+* Feedback on Success and Error: show in status bar oder as tooltip over button (latter only for errors)
 
 
 ### Changed

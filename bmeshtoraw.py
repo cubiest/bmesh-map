@@ -14,6 +14,7 @@ from bpy import context
 
 class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     EXPORT_FILE: bpy.props.StringProperty(name="Filename:", default="heightmap", maxlen=30)
+    EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
 
@@ -45,10 +46,6 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
 
 
     def draw(self, context):
-        obj = context.active_object
-        if obj is None:
-            return
-
         layout = self.layout
         global_settings = context.scene.MTR_ExportProperties
 
@@ -72,6 +69,8 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         col.label(text="Export:")
 
         box = col.box()
+        if global_settings.EXPORT_ERROR:
+            box.alert = global_settings.EXPORT_ERROR
         box.prop(global_settings, "EXPORT_FILE")
         box.prop(global_settings, "EXPORT_INVERT_Y")
         box.prop(global_settings, "EXPORT_INVERT_X")
@@ -83,33 +82,19 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
 
 
 class MTR_StatMesh(bpy.types.Operator):
-    bl_label = "Get mesh's heightmap info"
+    bl_label = "Get mesh's heightmap info and check for errors"
     bl_idname = "object.stat_mesh"
 
 
     def execute(self, context):
-        obj = context.active_object
-        heights = list() # float
-        # data is of type bpy.types.Mesh
-        for v in obj.data.vertices:
-            heights.append(v.co[2])
-
-        bottom = heights[0]
-        top = heights[0]
-        for h in heights:
-            if h > top:
-                top = h
-            elif h < bottom:
-                bottom = h
-        bottom = round_decimals(bottom, 4)
-        top = round_decimals(top, 4)
-
-        res = str(int(math.sqrt(len(obj.data.vertices))))
+        result = fullcheck(self, context)
 
         global_settings = context.scene.MTR_ExportProperties
-        global_settings.OBJ_PROP_RES = res
-        global_settings.OBJ_PROP_BOTTOM = str(bottom)
-        global_settings.OBJ_PROP_TOP = str(top)
+        global_settings.OBJ_PROP_RES = str(result[1])
+        global_settings.OBJ_PROP_BOTTOM = str(result[4])
+        global_settings.OBJ_PROP_TOP = str(result[5])
+
+        global_settings.EXPORT_ERROR = not result[0]
 
         return {'FINISHED'}
 
@@ -119,60 +104,24 @@ class MTR_MeshToRaw(bpy.types.Operator):
     bl_label = "Mesh to Raw"
 
 
-    def precheck(self, obj, res):
-        if not is_power_of_2(res-1):
-            show_error_msg(self, f"Mesh resolution is not power of 2 + 1: got {res}")
-            return False
-
-        width = int(obj.dimensions[0])
-        depth = int(obj.dimensions[1])
-
-        if width != depth:
-            show_error_msg(self, f"Dimensions are not equal: got {width}x{depth}")
-            return False
-
-        if not is_power_of_2(width):
-            show_error_msg(self, f"Dimensions are not power of 2: got {width}")
-            return False
-
-        return True
-
-
     def execute(self, context):
-        obj = context.active_object
-
-        res = int(math.sqrt(len(obj.data.vertices)))
-        if not self.precheck(obj, res):
+        result = fullcheck(self, context)
+        if not result[0]:
+            context.scene.MTR_ExportProperties.EXPORT_ERROR = True
             return {'CANCELLED'}
 
-        positions = list() # Vector2
-        heights = list() # float
-        # data is of type bpy.types.Mesh
-        for v in obj.data.vertices:
-            positions.append(v.co.to_2d())
-            heights.append(v.co[2])
-
-        heightmap = [[0 for x in range(res)] for y in range(res)] # integers
-
-        bottom = heights[0]
-        top = heights[0]
-        for h in heights:
-            if h > top:
-                top = h
-            elif h < bottom:
-                bottom = h
-        bottom = round_decimals(bottom, 4)
-        top = round_decimals(top, 4)
-
+        res = result[1]
+        bottom = result[4]
+        top = result[5]
         h_scale = 65535.0 / (top - bottom)
+        positions = result[2]
+        heights = result[3]
+        heightmap = [[0 for x in range(res)] for y in range(res)] # integers
 
         for i in range(len(positions)):
             pos = positions[i]
             x = int(pos[0])
             y = int(pos[1])
-            if x < 0 or y < 0 or x >= res or y >= res:
-                show_error_msg(self, f"Position ({x}, {y}) is out-of-bounds [0, {res - 1}]")
-                return {'CANCELLED'}
             heightmap[x][y] = round_int((heights[i] - bottom) * h_scale)
 
         global_settings = context.scene.MTR_ExportProperties
@@ -209,9 +158,72 @@ class MTR_MeshToRaw(bpy.types.Operator):
         export.write(bytes)
         export.close()
 
+        global_settings.EXPORT_ERROR = False
         show_info_msg(self, "Export done")
 
         return {'FINISHED'}
+
+
+# fullcheck returns a tuple defined as follows
+# - bool: is True if no errors were found
+# - int: Mesh resolution
+# - list: positions, or empty on error
+# - list: heights, or empty on error
+# - float: lowest height value, or 0.0 on error
+# - float: highest height value, or 0.0 on error
+def fullcheck(self, context):
+    obj = context.active_object
+    res = int(math.sqrt(len(obj.data.vertices)))
+
+    positions = list() # Vector2
+    heights = list() # float
+    # data is of type bpy.types.Mesh
+    for v in obj.data.vertices:
+        positions.append(v.co.to_2d())
+        heights.append(v.co[2])
+
+    ok = precheck(self, obj, res, positions)
+    if not ok:
+        return (False, res, [], [], 0.0, 0.0)
+
+    bottom = heights[0]
+    top = heights[0]
+    for h in heights:
+        if h > top:
+            top = h
+        elif h < bottom:
+            bottom = h
+    bottom = round_decimals(bottom, 4)
+    top = round_decimals(top, 4)
+
+    return (True, res, positions, heights, bottom, top)
+
+
+def precheck(self, obj, res, positions):
+    if not is_power_of_2(res-1):
+        show_error_msg(self, f"Mesh resolution is not power of 2 + 1: got {res}")
+        return False
+
+    width = int(obj.dimensions[0])
+    depth = int(obj.dimensions[1])
+
+    if width != depth:
+        show_error_msg(self, f"Dimensions are not equal: got {width}x{depth}")
+        return False
+
+    if not is_power_of_2(width):
+        show_error_msg(self, f"Dimensions are not power of 2: got {width}")
+        return False
+
+    for i in range(len(positions)):
+        pos = positions[i]
+        x = int(pos[0])
+        y = int(pos[1])
+        if x < 0 or y < 0 or x >= res or y >= res:
+            show_error_msg(self, f"Position ({x}, {y}) is out-of-bounds [0, {res - 1}]")
+            return False
+
+    return True
 
 
 def show_error_msg(self, txt):
