@@ -1,9 +1,9 @@
 bl_info = {
     "name": "BMesh Map",
     "author": "Cubiest, Benjamin Lösch",
-    "version": (1, 2, 0),
+    "version": (1, 3, 0),
     "blender": (3, 3, 0),
-    "description": "Export your mesh as a RAW heightmap (uint16; little- or big-endian)",
+    "description": "Export your mesh as a RAW heightmap",
     "doc_url": "https://github.com/cubiest/bmesh-to-raw/blob/main/docs/README.md",
     "category": "Object",
 }
@@ -17,6 +17,18 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
+    EXPORT_BIT_DEPTH: bpy.props.EnumProperty(
+        name="Bit Depth",
+        default="out.16",
+        items=[
+            (
+                "out.16", "16-bit", "16-bit unsigned integer",
+            ),
+            (
+                "out.24", "24-bit", "24-bit unsigned integer",
+            ),
+        ],
+    )
     EXPORT_LITTLE_ENDIAN: bpy.props.BoolProperty(name="Little Endian", default=True)
 
     OBJ_PROP_FULL_NAME: bpy.props.StringProperty()
@@ -83,6 +95,7 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         box.prop(global_settings, "EXPORT_FILE")
         box.prop(global_settings, "EXPORT_INVERT_Y")
         box.prop(global_settings, "EXPORT_INVERT_X")
+        box.prop(global_settings, "EXPORT_BIT_DEPTH")
         box.prop(global_settings, "EXPORT_LITTLE_ENDIAN")
         box.operator("object.mesh_to_raw", text="Export")
 
@@ -113,7 +126,7 @@ class MTR_StatMesh(bpy.types.Operator):
 class MTR_MeshToRaw(bpy.types.Operator):
     bl_idname = "object.mesh_to_raw"
     bl_label = "BMesh Map"
-    bl_description = "Exports selected object's as a RAW file (integers of type ushort)"
+    bl_description = "Exports selected object's as a RAW file"
 
 
     def execute(self, context):
@@ -122,10 +135,16 @@ class MTR_MeshToRaw(bpy.types.Operator):
             context.scene.MTR_ExportProperties.EXPORT_ERROR = True
             return {'CANCELLED'}
 
+        global_settings = context.scene.MTR_ExportProperties
+
         res = result[1]
         bottom = result[4]
         top = result[5]
-        h_scale = 65535.0 / (top - bottom)
+        h_scale = 0.0
+        if global_settings.EXPORT_BIT_DEPTH == "out.24":
+            h_scale = 16777215.0 / (top - bottom)
+        elif global_settings.EXPORT_BIT_DEPTH == "out.16":
+            h_scale = 65535.0 / (top - bottom)
         positions = result[2]
         heights = result[3]
         heightmap = [[0 for x in range(res)] for y in range(res)] # integers
@@ -135,8 +154,6 @@ class MTR_MeshToRaw(bpy.types.Operator):
             x = int(pos[0])
             y = int(pos[1])
             heightmap[x][y] = round_int((heights[i] - bottom) * h_scale)
-
-        global_settings = context.scene.MTR_ExportProperties
 
         y_start = 0
         y_stop = res
@@ -158,13 +175,29 @@ class MTR_MeshToRaw(bpy.types.Operator):
             for x in range(x_start, x_stop, x_step):
                 flattend_heightmap.append(heightmap[x][y])
 
-        format = ""
-        if global_settings.EXPORT_LITTLE_ENDIAN:
-            format = f"<{res*res}H"
-        else:
-            format = f">{res*res}H"
+        b_out = bytes(0)
 
-        bytes = struct.pack(format, *flattend_heightmap) # ushort (aka unsigned 16-bit-integer)
+        if global_settings.EXPORT_BIT_DEPTH == "out.24":
+            order = list()
+            if global_settings.EXPORT_LITTLE_ENDIAN:
+                order = [0, 8, 16]
+            else:
+                order = [16, 8, 0]
+
+            out = list()
+            for h in flattend_heightmap:
+                for i in order:
+                    out.append((h >> i) & 0xff)
+
+            b_out = bytes(out) # unsigned 24-bit-integer
+        elif global_settings.EXPORT_BIT_DEPTH == "out.16":
+            format = ""
+            if global_settings.EXPORT_LITTLE_ENDIAN:
+                format = f"<{res*res}H"
+            else:
+                format = f">{res*res}H"
+
+            b_out = struct.pack(format, *flattend_heightmap) # ushort (aka unsigned 16-bit-integer)
 
         e_file = global_settings.EXPORT_FILE
         if not e_file.endswith(".raw"):
@@ -173,7 +206,7 @@ class MTR_MeshToRaw(bpy.types.Operator):
 
         export_path = bpy.path.abspath(e_file)
         export = open(export_path, 'bw') # open in binary-write mode
-        export.write(bytes)
+        export.write(b_out)
         export.close()
 
         global_settings.EXPORT_ERROR = False
