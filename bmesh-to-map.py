@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "Mesh To Raw",
+    "name": "BMesh Map",
     "author": "Cubiest, Benjamin Lösch",
     "version": (1, 2, 0),
     "blender": (3, 3, 0),
@@ -25,8 +25,8 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
 
 
 class MTR_PT_ExportPanel(bpy.types.Panel):
-    """Mesh to Raw (unsigned 16-bit-integer in little-endian)"""
-    bl_label = "RAW Heightmap Exporter"
+    """BMesh Map (unsigned 16-bit-integer in little-endian)"""
+    bl_label = "BMesh Map"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Heightmap"
@@ -109,7 +109,7 @@ class MTR_StatMesh(bpy.types.Operator):
 
 class MTR_MeshToRaw(bpy.types.Operator):
     bl_idname = "object.mesh_to_raw"
-    bl_label = "Mesh to Raw"
+    bl_label = "BMesh Map"
 
 
     def execute(self, context):
