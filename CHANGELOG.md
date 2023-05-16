@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * feature: toggling between endianness
 * feature: allow selecting bit-depth of exported integers: 16, 24
 * descriptions for operators (buttons)
+* errors for invalid export path
 
 
 ### Changed

@@ -209,8 +209,16 @@ class MTR_MeshToRaw(bpy.types.Operator):
             b_out = struct.pack(format, *flattend_heightmap) # ushort (aka unsigned 16-bit-integer)
 
         e_file = global_settings.EXPORT_FILE_PATH
-        if not e_file.endswith(".raw"):
-            e_file += ".raw"
+        if e_file == "":
+            global_settings.EXPORT_ERROR = True
+            show_error_msg(self, "Export path is undefined")
+            return {'CANCELLED'}
+        if bpy.path.basename(e_file) == "":
+            global_settings.EXPORT_ERROR = True
+            show_error_msg(self, "Please specify a filename")
+            return {'CANCELLED'}
+
+        e_file = bpy.path.ensure_ext(e_file, ".raw")
 
         export_path = bpy.path.abspath(e_file)
         export = open(export_path, 'bw') # open in binary-write mode
