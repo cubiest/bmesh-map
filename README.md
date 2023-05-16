@@ -1,10 +1,13 @@
 # Blender Mesh to RAW file Exporter
 
-Exports your selected object's mesh as a heightmap `.raw` file.
-* ushort (aka 16bit unsigned integer)
-* little-endianess
+Exports your selected object's mesh as a heightmap `.raw` file with
+* 16-bit or 24-bit unsigned integer value
+* endianness: little or big
 
 Works well with [Zylann's Heightmap Plugin](https://github.com/Zylann/godot_heightmap_plugin)
+
+
+![Mesh in Blender](docs/images/blender.png)
 
 
 ## Installation
@@ -14,6 +17,7 @@ Download the file and install like any Blender Add-on.
 Verified Compatibility
 | Add-on Version | Blender Versions |
 | --------------- | --------------- |
+| 1.3             | 3.3             |
 | 1.2             | 3.3             |
 | 1.1             | 3.3             |
 | 1.0             | 3.3             |
