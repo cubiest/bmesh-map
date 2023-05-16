@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
-## [Unreleased]
+## [1.3.0] - 2023-05-16
 
 ### Added
 
@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 * Addon name
+* Min and Max height Labels are now Entries
+* Change Filename Entry to Filepath Entry (enables user to use file dialog to choose save location)
 
 
 ## [1.2.0] - 2023-04-24

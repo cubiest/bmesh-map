@@ -16,7 +16,7 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     MESH_BOTTOM: bpy.props.StringProperty(default="?") # NOTE: not gonna use FloatProperty, because Blender starts rounding if panel width is too narrow
     MESH_TOP: bpy.props.StringProperty(default="?")
 
-    EXPORT_FILE: bpy.props.StringProperty(name="Filename", subtype="FILE_NAME", default="heightmap", maxlen=30)
+    EXPORT_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype="FILE_PATH")
     EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
@@ -98,7 +98,7 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         box = col.box()
         if global_settings.EXPORT_ERROR:
             box.alert = global_settings.EXPORT_ERROR
-        box.prop(global_settings, "EXPORT_FILE")
+        box.prop(global_settings, "EXPORT_FILE_PATH")
         box.prop(global_settings, "EXPORT_INVERT_Y")
         box.prop(global_settings, "EXPORT_INVERT_X")
         box.prop(global_settings, "EXPORT_BIT_DEPTH")
@@ -208,10 +208,9 @@ class MTR_MeshToRaw(bpy.types.Operator):
 
             b_out = struct.pack(format, *flattend_heightmap) # ushort (aka unsigned 16-bit-integer)
 
-        e_file = global_settings.EXPORT_FILE
+        e_file = global_settings.EXPORT_FILE_PATH
         if not e_file.endswith(".raw"):
             e_file += ".raw"
-        e_file =  "//" + e_file # make relative path from blend file
 
         export_path = bpy.path.abspath(e_file)
         export = open(export_path, 'bw') # open in binary-write mode
