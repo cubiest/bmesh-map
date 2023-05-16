@@ -13,7 +13,10 @@ from bpy import context
 
 
 class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
-    EXPORT_FILE: bpy.props.StringProperty(name="Filename:", default="heightmap", maxlen=30)
+    MESH_BOTTOM: bpy.props.StringProperty(default="?") # NOTE: not gonna use FloatProperty, because Blender starts rounding if panel width is too narrow
+    MESH_TOP: bpy.props.StringProperty(default="?")
+
+    EXPORT_FILE: bpy.props.StringProperty(name="Filename", subtype="FILE_NAME", default="heightmap", maxlen=30)
     EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
@@ -83,7 +86,10 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         box = col.box()
         box.label(text="Name: " + name)
         box.label(text=res)
-        box.label(text=range)
+        row = box.row()
+        row.label(text="Min-Max:")
+        row.prop(global_settings, "MESH_BOTTOM", text="")
+        row.prop(global_settings, "MESH_TOP", text="")
 
         col.separator() # close box
 
@@ -117,6 +123,9 @@ class MTR_StatMesh(bpy.types.Operator):
         global_settings.OBJ_PROP_RES = str(result[1])
         global_settings.OBJ_PROP_BOTTOM = str(result[4])
         global_settings.OBJ_PROP_TOP = str(result[5])
+
+        global_settings.MESH_BOTTOM = global_settings.OBJ_PROP_BOTTOM
+        global_settings.MESH_TOP = global_settings.OBJ_PROP_TOP
 
         global_settings.EXPORT_ERROR = not result[0]
 
