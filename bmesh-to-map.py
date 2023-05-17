@@ -50,7 +50,7 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode == 'OBJECT'
+        return context.mode == 'OBJECT' or context.mode == 'EDIT_MESH' or context.mode == 'SCULPT'
 
 
     def get_version(self):
