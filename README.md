@@ -51,7 +51,7 @@ To get an accurate heightmap, your vertices should be on full meters (float valu
 
 ![vertex positions](docs/images/vertices_spacing.png)
 > Object Origin is at 3D Cursor, so the selected vertex is at Vector2 position (1.0, 1.0) in Local Space.
-> Evenly spaced, thed vertices align with the Blender Grid.
+> Evenly spaced, the vertices align with the Blender Grid.
 
 
 ![Mesh in Blender](docs/images/blender.png)

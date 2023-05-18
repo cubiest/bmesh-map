@@ -16,7 +16,8 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     MESH_BOTTOM: bpy.props.StringProperty(default="?") # NOTE: not gonna use FloatProperty, because Blender starts rounding if panel width is too narrow
     MESH_TOP: bpy.props.StringProperty(default="?")
 
-    EXPORT_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype='FILE_PATH')
+    EXPORT_RAW_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype='FILE_PATH')
+    EXPORT_EXR_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype='FILE_PATH')
     EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
@@ -38,78 +39,6 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     OBJ_PROP_RES: bpy.props.StringProperty()
     OBJ_PROP_BOTTOM: bpy.props.StringProperty()
     OBJ_PROP_TOP: bpy.props.StringProperty()
-
-
-class MTR_PT_ExportPanel(bpy.types.Panel):
-    """BMesh Map"""
-    bl_label = "BMesh Map"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "BMesh Map"
-
-
-    @classmethod
-    def poll(cls, context):
-        return context.mode == 'OBJECT' or context.mode == 'EDIT_MESH' or context.mode == 'SCULPT'
-
-
-    def get_version(self):
-        version = ""
-        for v in bl_info["version"]:
-            version += str(v) + "."
-        if version.endswith("."):
-            version = version[:-1]
-        return version
-
-
-    def draw(self, context):
-        layout = self.layout
-        global_settings = context.scene.MTR_ExportProperties
-
-        name = context.active_object.name
-        res = "?"
-        bottom = "?"
-        top = "?"
-
-        if context.active_object.name == global_settings.OBJ_PROP_FULL_NAME:
-            res = global_settings.OBJ_PROP_RES
-            bottom = global_settings.OBJ_PROP_BOTTOM
-            top = global_settings.OBJ_PROP_TOP
-
-        res = f"Res: {res}x{res}"
-        range = f"Min-Max: {bottom} - {top}"
-
-        col = layout.column()
-        col.label(text="Stats:")
-        col.operator("object.stat_mesh", text="Get Status", icon='FILE_REFRESH')
-
-        box = col.box()
-        box.label(text="Name: " + name)
-        box.label(text=res)
-        row = box.row()
-        row.label(text="Min-Max:")
-        minmax_row = row.column().row()
-        minmax_row.enabled = False
-        minmax_row.prop(global_settings, "MESH_BOTTOM", text="")
-        minmax_row.prop(global_settings, "MESH_TOP", text="")
-
-        col.separator() # close box
-
-        col.label(text="Export:")
-
-        box = col.box()
-        if global_settings.EXPORT_ERROR:
-            box.alert = global_settings.EXPORT_ERROR
-        box.prop(global_settings, "EXPORT_FILE_PATH")
-        box.prop(global_settings, "EXPORT_INVERT_Y")
-        box.prop(global_settings, "EXPORT_INVERT_X")
-        box.prop(global_settings, "EXPORT_BIT_DEPTH")
-        box.prop(global_settings, "EXPORT_LITTLE_ENDIAN")
-        box.operator("object.mesh_to_raw", text="Export", icon='EXPORT')
-
-        col.separator() # close box
-
-        col.label(text="ver " + self.get_version())
 
 
 class MTR_StatMesh(bpy.types.Operator):
@@ -134,10 +63,68 @@ class MTR_StatMesh(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class MTR_PT_ExportRawPanel(bpy.types.Panel):
+    """BMesh Map"""
+    bl_label = "RAW Export"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'BMesh Map'
+
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT' or context.mode == 'EDIT_MESH' or context.mode == 'SCULPT'
+
+
+    def draw(self, context):
+        layout = self.layout
+        global_settings = context.scene.MTR_ExportProperties
+
+        name = context.active_object.name
+        res = "?"
+
+        if context.active_object.name == global_settings.OBJ_PROP_FULL_NAME:
+            res = global_settings.OBJ_PROP_RES
+
+        res = f"Res: {res}x{res}"
+
+        col = layout.column()
+        col.label(text="Stats:")
+        col.operator("object.stat_mesh", text="Get Status", icon='FILE_REFRESH')
+
+        box = col.box()
+        box.label(text="Name: " + name)
+        box.label(text=res)
+        row = box.row()
+        row.label(text="Min-Max:")
+        minmax_row = row.column().row()
+        minmax_row.enabled = False
+        minmax_row.prop(global_settings, "MESH_BOTTOM", text="")
+        minmax_row.prop(global_settings, "MESH_TOP", text="")
+
+        col.separator() # close box
+
+        col.label(text="Export:")
+
+        box = col.box()
+        if global_settings.EXPORT_ERROR:
+            box.alert = global_settings.EXPORT_ERROR
+        box.prop(global_settings, "EXPORT_RAW_FILE_PATH")
+        box.prop(global_settings, "EXPORT_INVERT_Y")
+        box.prop(global_settings, "EXPORT_INVERT_X")
+        box.prop(global_settings, "EXPORT_BIT_DEPTH")
+        box.prop(global_settings, "EXPORT_LITTLE_ENDIAN")
+        box.operator("object.mesh_to_raw", text="Export", icon='EXPORT')
+
+        col.separator() # close box
+
+        col.label(text="ver " + get_version())
+
+
 class MTR_MeshToRaw(bpy.types.Operator):
     bl_idname = "object.mesh_to_raw"
-    bl_label = "BMesh Map"
-    bl_description = "Exports selected object's as a RAW file"
+    bl_label = "RAW Export"
+    bl_description = "Exports selected object as a RAW file"
 
 
     def execute(self, context):
@@ -160,7 +147,7 @@ class MTR_MeshToRaw(bpy.types.Operator):
         heights = result[3]
         heightmap = [[0 for x in range(res)] for y in range(res)] # integers
 
-        for i in range(len(positions)):
+        for i in range(res*res):
             pos = positions[i]
             x = int(pos[0])
             y = int(pos[1])
@@ -210,7 +197,7 @@ class MTR_MeshToRaw(bpy.types.Operator):
 
             b_out = struct.pack(format, *flattend_heightmap) # ushort (aka unsigned 16-bit-integer)
 
-        e_file = global_settings.EXPORT_FILE_PATH
+        e_file = global_settings.EXPORT_RAW_FILE_PATH
         if e_file == "":
             global_settings.EXPORT_ERROR = True
             show_error_msg(self, "Export path is undefined")
@@ -231,6 +218,114 @@ class MTR_MeshToRaw(bpy.types.Operator):
         show_info_msg(self, "Export done")
 
         return {'FINISHED'}
+
+
+class MTR_PT_ExportExrPanel(bpy.types.Panel):
+    """BMesh Map"""
+    bl_label = "EXR Export"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'BMesh Map'
+
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT' or context.mode == 'EDIT_MESH' or context.mode == 'SCULPT'
+
+
+    def draw(self, context):
+        layout = self.layout
+        global_settings = context.scene.MTR_ExportProperties
+
+        name = context.active_object.name
+        res = "?"
+
+        if context.active_object.name == global_settings.OBJ_PROP_FULL_NAME:
+            res = global_settings.OBJ_PROP_RES
+
+        res = f"Res: {res}x{res}"
+
+        col = layout.column()
+        col.label(text="Stats:")
+        col.operator("object.stat_mesh", text="Get Status", icon='FILE_REFRESH')
+
+        box = col.box()
+        box.label(text="Name: " + name)
+        box.label(text=res)
+
+        col.separator() # close box
+
+        col.label(text="Export:")
+
+        box = col.box()
+        if global_settings.EXPORT_ERROR:
+            box.alert = global_settings.EXPORT_ERROR
+        box.prop(global_settings, "EXPORT_EXR_FILE_PATH")
+        # FIXME: support inversion
+        # box.prop(global_settings, "EXPORT_INVERT_Y")
+        # box.prop(global_settings, "EXPORT_INVERT_X")
+        box.operator("object.mesh_to_exr", text="Export", icon='EXPORT')
+
+        col.separator() # close box
+
+        col.label(text="ver " + get_version())
+
+
+class MTR_MeshToEXR(bpy.types.Operator):
+    bl_idname = "object.mesh_to_exr"
+    bl_label = "OpenEXR Export"
+    bl_description = "Exports selected object as an OpenEXR file"
+
+
+    def execute(self, context):
+        result = fullcheck(self, context)
+        if not result[0]:
+            context.scene.MTR_ExportProperties.EXPORT_ERROR = True
+            return {'CANCELLED'}
+
+        res = result[1]
+
+        # NOTE:
+        # float_buffer sets data to 32-bit floats and allows range greater than 0..1,
+        # afterwards, changing to 16-bit is not possible
+        heightmap = bpy.data.images.new("heightmap", res, res, float_buffer=True, is_data=True)
+        heightmap.file_format = 'OPEN_EXR'
+
+        heights = result[3]
+
+        # FIXME: support inversion
+        pixels = list()
+        for i in range(res*res):
+            pixels.extend((heights[i], 0.0, 0.0, 1.0))
+        heightmap.pixels = pixels
+
+        global_settings = context.scene.MTR_ExportProperties
+        e_file = global_settings.EXPORT_EXR_FILE_PATH
+        if e_file == "":
+            global_settings.EXPORT_ERROR = True
+            show_error_msg(self, "Export path is undefined")
+            return {'CANCELLED'}
+        if bpy.path.basename(e_file) == "":
+            global_settings.EXPORT_ERROR = True
+            show_error_msg(self, "Please specify a filename")
+            return {'CANCELLED'}
+
+        heightmap.filepath_raw = bpy.path.ensure_ext(e_file, ".exr")
+        heightmap.save()
+
+        global_settings.EXPORT_ERROR = False
+        show_info_msg(self, "Export done")
+
+        return {'FINISHED'}
+
+
+def get_version():
+    version = ""
+    for v in bl_info["version"]:
+        version += str(v) + "."
+    if version.endswith("."):
+        version = version[:-1]
+    return version
 
 
 # fullcheck returns a tuple defined as follows
@@ -326,13 +421,17 @@ def register():
     bpy.utils.register_class(MTR_PT_ExportSetting)
     bpy.utils.register_class(MTR_StatMesh)
     bpy.utils.register_class(MTR_MeshToRaw)
-    bpy.utils.register_class(MTR_PT_ExportPanel)
+    bpy.utils.register_class(MTR_PT_ExportRawPanel)
+    bpy.utils.register_class(MTR_MeshToEXR)
+    bpy.utils.register_class(MTR_PT_ExportExrPanel)
 
     bpy.types.Scene.MTR_ExportProperties = bpy.props.PointerProperty(type=MTR_PT_ExportSetting)
 
 
 def unregister():
-    bpy.utils.unregister_class(MTR_PT_ExportPanel)
+    bpy.utils.unregister_class(MTR_PT_ExportExrPanel)
+    bpy.utils.unregister_class(MTR_MeshToEXR)
+    bpy.utils.unregister_class(MTR_PT_ExportRawPanel)
     bpy.utils.unregister_class(MTR_MeshToRaw)
     bpy.utils.unregister_class(MTR_StatMesh)
     bpy.utils.unregister_class(MTR_PT_ExportSetting)

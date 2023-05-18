@@ -45,7 +45,8 @@ Enjoy the beautiful export!
 
 ### Correct Sculpting
 
-In the editor in sculpt mode, go to `Brush > Sculpt Plane` and change the value to `Z Plane`:
+If you want to correctly sculpt the terrain, you must only change the vertices' height values (i.e. affect their position on the z plane).  
+To achieve this, enter Sculpt Mode, then go to `Brush > Sculpt Plane` and change the value to `Z Plane`:
 
 ![Image of explanation above](images/sculpt_along_z-axis.png)
 
