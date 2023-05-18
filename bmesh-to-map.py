@@ -16,13 +16,13 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     MESH_BOTTOM: bpy.props.StringProperty(default="?") # NOTE: not gonna use FloatProperty, because Blender starts rounding if panel width is too narrow
     MESH_TOP: bpy.props.StringProperty(default="?")
 
-    EXPORT_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype="FILE_PATH")
+    EXPORT_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype='FILE_PATH')
     EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
     EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis", default=True)
     EXPORT_BIT_DEPTH: bpy.props.EnumProperty(
         name="Bit Depth",
-        default="out.16",
+        default="out.24",
         items=[
             (
                 "out.16", "16-bit", "16-bit unsigned integer",
@@ -81,15 +81,17 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
 
         col = layout.column()
         col.label(text="Stats:")
-        col.operator("object.stat_mesh", text="Get Status")
+        col.operator("object.stat_mesh", text="Get Status", icon='FILE_REFRESH')
 
         box = col.box()
         box.label(text="Name: " + name)
         box.label(text=res)
         row = box.row()
         row.label(text="Min-Max:")
-        row.prop(global_settings, "MESH_BOTTOM", text="")
-        row.prop(global_settings, "MESH_TOP", text="")
+        minmax_row = row.column().row()
+        minmax_row.enabled = False
+        minmax_row.prop(global_settings, "MESH_BOTTOM", text="")
+        minmax_row.prop(global_settings, "MESH_TOP", text="")
 
         col.separator() # close box
 
@@ -103,7 +105,7 @@ class MTR_PT_ExportPanel(bpy.types.Panel):
         box.prop(global_settings, "EXPORT_INVERT_X")
         box.prop(global_settings, "EXPORT_BIT_DEPTH")
         box.prop(global_settings, "EXPORT_LITTLE_ENDIAN")
-        box.operator("object.mesh_to_raw", text="Export")
+        box.operator("object.mesh_to_raw", text="Export", icon='EXPORT')
 
         col.separator() # close box
 
