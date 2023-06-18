@@ -19,7 +19,7 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     EXPORT_RAW_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype='FILE_PATH')
     EXPORT_EXR_FILE_PATH: bpy.props.StringProperty(name="Filename", subtype='FILE_PATH')
     EXPORT_ERROR: bpy.props.BoolProperty() # is True if last execution failed or `object.stat_mesh` found an error
-    EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis", default=True)
+    EXPORT_INVERT_Y: bpy.props.BoolProperty(name="Invert Y-axis")
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis")
     EXPORT_BIT_DEPTH: bpy.props.EnumProperty(
         name="Bit Depth",
@@ -150,7 +150,7 @@ class MTR_MeshToRaw(bpy.types.Operator):
         for i in range(res*res):
             pos = positions[i]
             x = int(pos[0])
-            y = int(pos[1])
+            y = (res-1) - int(pos[1])
             heightmap[x][y] = round_int((heights[i] - bottom) * h_scale)
 
         flattend_heightmap = flatten_heightmap(heightmap, res, global_settings.EXPORT_INVERT_Y, global_settings.EXPORT_INVERT_X)
