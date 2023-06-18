@@ -24,6 +24,7 @@ To update your add-on, please remove the old version and install the new version
 Verified Compatibility
 | Add-on Version | Blender Versions |
 | --------------- | --------------- |
+| 1.4             | 3.3             |
 | 1.3             | 3.3             |
 | 1.2             | 3.3             |
 | 1.1             | 3.3             |
