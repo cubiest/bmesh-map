@@ -24,6 +24,7 @@ To update your add-on, please remove the old version and install the new version
 Verified Compatibility
 | Add-on Version | Blender Versions |
 | --------------- | --------------- |
+| 1.4             | 3.3             |
 | 1.3             | 3.3             |
 | 1.2             | 3.3             |
 | 1.1             | 3.3             |
@@ -51,7 +52,7 @@ To get an accurate heightmap, your vertices should be on full meters (float valu
 
 ![vertex positions](docs/images/vertices_spacing.png)
 > Object Origin is at 3D Cursor, so the selected vertex is at Vector2 position (1.0, 1.0) in Local Space.
-> Evenly spaced, thed vertices align with the Blender Grid.
+> Evenly spaced, the vertices align with the Blender Grid.
 
 
 ![Mesh in Blender](docs/images/blender.png)
