@@ -1,8 +1,10 @@
 # Blender Mesh to RAW file Exporter
 
-Exports your selected object's mesh as a heightmap `.raw` file with
-* 16-bit or 24-bit unsigned integer value
-* endianness: little or big
+Exports your selected object's mesh as a heightmap file in the formats
+* `.raw`
+  * bit depth: 16, 24 or 32 (unsigned integer value)
+  * endianness: little or big
+* OpenEXR (32-bit float)
 
 Tested import with the following heightmap terrain engines
 * [Zylann's Heightmap Plugin](https://github.com/Zylann/godot_heightmap_plugin)
@@ -13,7 +15,7 @@ The most common method to create a heightmap in Blender is to use the camera in 
 But not everybody supports 16-bit PNG (e.g. [Godot does not](https://github.com/godotengine/godot/pull/19497)).  
 Then there's the the full (32-bit; not necessarily supported in target platform) or single channel half (16-bit) precision floating-point method using [_OpenEXR_](https://blender.stackexchange.com/questions/191253/how-to-render-height-map-in-blender), where you'll have to know if your target platform needs floats in the range of 0..1 or real height values (in meters). You could later remap e.g. 0..1 to real heights, but the precision loss there is not acceptable. Precision loss often results in _stepping artifacts_.  
 And then you have to be careful of Blender's color management: the color space needs to be linear, not e.g. sRGB. And use the correct [map height value](https://github.com/Zylann/godot_heightmap_plugin/issues/90#issuecomment-536215938) in your material.  
-And I tried all that, even working with Blender's compositor and reading the camera's z-depth. [Nothing gave good results](https://github.com/Zylann/godot_heightmap_plugin/issues/327). Hence this add-on, which uses real height information and directly reads the vertices' z-value and converts float to 16- or 24-bit unsigned integers for the `.raw` file.
+And I tried all that, even working with Blender's compositor and reading the camera's z-depth. [Nothing gave good results](https://github.com/Zylann/godot_heightmap_plugin/issues/327). Hence this add-on, which uses real height information and directly reads the vertices' z-value and converts them as needed.
 
 
 ## Installation
