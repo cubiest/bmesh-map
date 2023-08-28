@@ -23,13 +23,16 @@ class MTR_PT_ExportSetting(bpy.types.PropertyGroup):
     EXPORT_INVERT_X: bpy.props.BoolProperty(name="Invert X-axis")
     EXPORT_BIT_DEPTH: bpy.props.EnumProperty(
         name="Bit Depth",
-        default="out.24",
+        default="out.32",
         items=[
             (
-                "out.16", "16-bit", "16-bit unsigned integer",
+                "out.32", "32-bit", "32-bit unsigned integer",
             ),
             (
                 "out.24", "24-bit", "24-bit unsigned integer",
+            ),
+            (
+                "out.16", "16-bit", "16-bit unsigned integer",
             ),
         ],
     )
@@ -139,7 +142,9 @@ class MTR_MeshToRaw(bpy.types.Operator):
         bottom = result[4]
         top = result[5]
         h_scale = 0.0
-        if global_settings.EXPORT_BIT_DEPTH == "out.24":
+        if global_settings.EXPORT_BIT_DEPTH == "out.32":
+            h_scale = 4294967295.0 / (top - bottom)
+        elif global_settings.EXPORT_BIT_DEPTH == "out.24":
             h_scale = 16777215.0 / (top - bottom)
         elif global_settings.EXPORT_BIT_DEPTH == "out.16":
             h_scale = 65535.0 / (top - bottom)
@@ -157,7 +162,20 @@ class MTR_MeshToRaw(bpy.types.Operator):
 
         b_out = bytes(0)
 
-        if global_settings.EXPORT_BIT_DEPTH == "out.24":
+        if global_settings.EXPORT_BIT_DEPTH == "out.32":
+            order = list()
+            if global_settings.EXPORT_LITTLE_ENDIAN:
+                order = [0, 8, 16, 24]
+            else:
+                order = [24, 16, 8, 0]
+
+            out = list()
+            for h in flattend_heightmap:
+                for i in order:
+                    out.append((h >> i) & 0xff)
+
+            b_out = bytes(out) # unsigned 32-bit-integer
+        elif global_settings.EXPORT_BIT_DEPTH == "out.24":
             order = list()
             if global_settings.EXPORT_LITTLE_ENDIAN:
                 order = [0, 8, 16]
