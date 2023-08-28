@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [1.4.0] - 2023-08-28
+
+### Added
+
+* feature: OpenEXR export
+* feature: 32-bit `RAW` export
+
+
+### Changed
+
+* y-axis inversion as a default was removed
+
+
+### Fixed
+
+* Fix incorrect y-axis mapping on RAW export: y-axis was inverted/flipped
+
+
 ## [1.3.0] - 2023-05-16
 
 ### Added
