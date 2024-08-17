@@ -23,10 +23,12 @@ And I tried all that, even working with Blender's compositor and reading the cam
 Download the file and install like any Blender Add-on.  
 To update your add-on, please remove the old version and install the new version.
 
+Using Blender 3.3 is **not** recommended, if you want to use the OpenEXR export. It seems Blender 3.3 messes up the export. I can confirm using Blender 4.2 works flawlessly.
+
 Verified Compatibility
 | Add-on Version | Blender Versions |
 | --------------- | --------------- |
-| 1.4.1           | 3.3             |
+| 1.4.1           | 4.2, 3.3        |
 | 1.4             | 3.3             |
 | 1.3             | 3.3             |
 | 1.2             | 3.3             |
