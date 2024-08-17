@@ -1,7 +1,7 @@
 bl_info = {
     "name": "BMesh Map",
     "author": "Cubiest, Benjamin Lösch",
-    "version": (1, 4, 0),
+    "version": (1, 4, 1),
     "blender": (3, 3, 0),
     "description": "Export your mesh as a RAW heightmap",
     "doc_url": "https://github.com/cubiest/bmesh-to-raw/blob/main/docs/README.md",
@@ -141,22 +141,33 @@ class MTR_MeshToRaw(bpy.types.Operator):
         res = result[1]
         bottom = result[4]
         top = result[5]
-        h_scale = 0.0
+        max_val = 0.0
         if global_settings.EXPORT_BIT_DEPTH == "out.32":
-            h_scale = 4294967295.0 / (top - bottom)
+            max_val = 4294967295.0
         elif global_settings.EXPORT_BIT_DEPTH == "out.24":
-            h_scale = 16777215.0 / (top - bottom)
+            max_val = 16777215.0
         elif global_settings.EXPORT_BIT_DEPTH == "out.16":
-            h_scale = 65535.0 / (top - bottom)
+            max_val = 65535.0
+
+        if max_val <= 0.0001:
+            show_error_msg(self, "Corrupt settings: cannot get bit depth for export")
+            return {'CANCELLED'}
+
+        h_scale = max_val / (top - bottom)
         positions = result[2]
         heights = result[3]
         heightmap = [[0 for x in range(res)] for y in range(res)] # integers
 
+        max_val_int = round_int(max_val)
         for i in range(res*res):
             pos = positions[i]
             x = int(pos[0])
             y = (res-1) - int(pos[1])
-            heightmap[x][y] = round_int((heights[i] - bottom) * h_scale)
+            h = round_int((heights[i] - bottom) * h_scale)
+            # This should no happen, because we round to 4 decimal places in fullcheck(), but just to be on the safe side:
+            if h > max_val_int:
+                h = max_val_int
+            heightmap[x][y] = h
 
         flattend_heightmap = flatten_heightmap(heightmap, res, global_settings.EXPORT_INVERT_Y, global_settings.EXPORT_INVERT_X)
 
@@ -343,7 +354,7 @@ def get_version():
 # - bool: is True if no errors were found
 # - int: Mesh resolution
 # - list: positions, or empty on error
-# - list: heights, or empty on error
+# - list: heights (rounded to 4 decimal places), or empty on error
 # - float: lowest height value, or 0.0 on error
 # - float: highest height value, or 0.0 on error
 def fullcheck(self, context):
@@ -364,15 +375,16 @@ def fullcheck(self, context):
     if not ok:
         return (False, res, [], [], 0.0, 0.0)
 
-    bottom = heights[0]
-    top = heights[0]
-    for h in heights:
+    bottom = round_decimals(heights[0])
+    top = bottom
+    for i in range(len(heights)):
+        h = heights[i]
+        h = round_decimals(h, 4)
+        heights[i] = h
         if h > top:
             top = h
         elif h < bottom:
             bottom = h
-    bottom = round_decimals(bottom, 4)
-    top = round_decimals(top, 4)
 
     return (True, res, positions, heights, bottom, top)
 
