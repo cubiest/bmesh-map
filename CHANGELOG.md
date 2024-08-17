@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.4.1] - 2024-08-17
+
+### Fixed
+
+* RAW export: Any height too close to the top height is set to 0 height
+
 
 ## [1.4.0] - 2023-08-28
 
