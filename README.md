@@ -1,4 +1,4 @@
-# Blender Mesh to RAW file Exporter
+# Blender Mesh to heightmap Exporter
 
 Exports your selected object's mesh as a heightmap file in the formats
 * `.raw`
