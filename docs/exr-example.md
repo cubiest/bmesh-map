@@ -19,8 +19,6 @@
 
 In Godot, with Zylann's Heightmap Plugin, you import your `.exr` as documented in the official docs.
 
-**Use the `godot4` branch** to actually use heightmaps with 32-bit precision!
-
 
 ![Imported map in Godot using Zylann's Heightmap Plugin](images/godot_zylanns_hm_plugin.png)
 
